@@ -6,15 +6,25 @@ body {
 
 .login-box {
   width: 100%;
-  max-width: 350px;
+  max-width: 420px;
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(8px);
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 14px 35px rgba(34, 36, 49, 0.18);
 }
 
 img {
   object-fit: cover;
 }
 
-.forgot-psw a{
+.forgot-psw a {
   text-decoration: none;
+  font-size: 0.92rem;
+}
+
+.input-group-text {
+  cursor: pointer;
 }
 
 .bg-image {
@@ -22,21 +32,18 @@ img {
   top: 0;
   left: 0;
   width: 100%;
-  height: 100VH;
-
+  height: 100vh;
   background: url('/LoginBackground.jpg') no-repeat center;
   background-size: cover;
   z-index: -2;
 }
 
-/* Overlay (Opacity 0.5) */
 .bg-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-
-  background: rgba(228, 226, 226, 0.4); /* 👈 opacity control */
+  background: linear-gradient(135deg, rgba(235, 242, 255, 0.65), rgba(245, 245, 245, 0.5));
   z-index: -1;
 }

@@ -9,7 +9,6 @@ import {
 } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { LoginRegisterService } from '../Service/Login-Register/login-register-service';
-import { email } from '@angular/forms/signals';
 
 @Component({
   selector: 'app-register',
@@ -81,6 +80,7 @@ export class Register implements OnInit {
     this.submitted = true;
 
     if (this.registerForm.invalid) {
+      this.registerForm.markAllAsTouched();
       return;
     }
 
