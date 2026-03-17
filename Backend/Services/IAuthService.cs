@@ -9,5 +9,8 @@ namespace ExamNest.Services
         Task<AuthResponseDto> VerifyEmailOtpAsync(VerifyEmailOtpRequestDto request);
         Task<AuthResponseDto> ResendEmailOtpAsync(ResendEmailOtpRequestDto request);
         Task<AuthResponseDto> GoogleLoginAsync(GoogleLoginRequestDto request);
+        Task<AuthResponseDto> ForgotPasswordAsync(ForgotPasswordRequestDto request);
+        Task<AuthResponseDto> VerifyForgotPasswordOtpAsync(VerifyForgotPasswordOtpRequestDto request);
+        Task<AuthResponseDto> ResetPasswordAsync(ResetPasswordRequestDto request);
     }
 }
