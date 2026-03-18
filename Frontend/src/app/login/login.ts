@@ -98,7 +98,6 @@ export class Login implements OnInit, OnDestroy {
         this.googleClientId = response?.clientId?.trim() ?? '';
 
         if (!this.googleClientId) {
-          this.IsGoogleAvailable = false;
           this.authError = 'Google Sign-In is not configured. Please contact support.';
           return;
         }
@@ -106,7 +105,6 @@ export class Login implements OnInit, OnDestroy {
         this.loadGoogleAuthScript();
       },
       error: () => {
-        this.IsGoogleAvailable = false;
         this.authError = 'Google Sign-In setup is unavailable right now. Please try email login.';
       },
     });
