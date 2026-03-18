@@ -13,17 +13,18 @@ namespace ExamNest.Services
 
         public async Task<GoogleUserInfo?> ValidateAsync(string idToken)
         {
-            var audience = _configuration["GoogleAuth:ClientId"];
-            if (string.IsNullOrWhiteSpace(audience))
+            var audiences = ResolveAllowedAudiences();
+            if (audiences.Length == 0)
             {
-                throw new InvalidOperationException("GoogleAuth:ClientId is missing.");
+                throw new InvalidOperationException(
+                    "Google OAuth client id is missing. Configure GoogleAuth:AllowedClientIds (array or CSV), GoogleAuth:ClientId, or Authentication:Google:ClientId.");
             }
 
             try
             {
                 var payload = await GoogleJsonWebSignature.ValidateAsync(idToken, new GoogleJsonWebSignature.ValidationSettings
                 {
-                    Audience = new[] { audience }
+                    Audience = audiences
                 });
 
                 return new GoogleUserInfo(
@@ -38,6 +39,25 @@ namespace ExamNest.Services
             {
                 return null;
             }
+        }
+
+        private string[] ResolveAllowedAudiences()
+        {
+            var configuredClientIds = _configuration.GetSection("GoogleAuth:AllowedClientIds").Get<string[]>() ?? Array.Empty<string>();
+            var configuredClientIdsCsv = _configuration["GoogleAuth:AllowedClientIdsCsv"];
+
+            var csvClientIds = string.IsNullOrWhiteSpace(configuredClientIdsCsv)
+                ? Array.Empty<string>()
+                : configuredClientIdsCsv.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+            return configuredClientIds
+                .Concat(csvClientIds)
+                .Append(_configuration["GoogleAuth:ClientId"])
+                .Append(_configuration["Authentication:Google:ClientId"])
+                .Where(clientId => !string.IsNullOrWhiteSpace(clientId))
+                .Select(clientId => clientId!.Trim())
+                .Distinct(StringComparer.Ordinal)
+                .ToArray();
         }
     }
 }
