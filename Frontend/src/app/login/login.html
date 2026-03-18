@@ -81,15 +81,19 @@
           <hr class="flex-grow-1" />
         </div>
 
-        <button
-          class="btn btn-outline-dark btn-lg w-100 d-flex align-items-center justify-content-center gap-2"
-          type="button"
-          (click)="SignInWithGoogle()"
-          [disabled]="IsLogin || IsGoogleLogin"
-        >
-          <img src="/google.svg" width="20" alt="Google" />
-          <strong>{{ IsGoogleLogin ? 'Opening Google...' : 'Sign In With Google' }}</strong>
-        </button>
+        @if (IsGoogleAvailable) {
+          <button
+            class="btn btn-outline-dark btn-lg w-100 d-flex align-items-center justify-content-center gap-2"
+            type="button"
+            (click)="SignInWithGoogle()"
+            [disabled]="IsLogin || IsGoogleLogin"
+          >
+            <img src="/google.svg" width="20" alt="Google" />
+            <strong>{{ IsGoogleLogin ? 'Opening Google...' : 'Sign In With Google' }}</strong>
+          </button>
+        } @else {
+          <div class="alert alert-secondary mb-0" role="alert">Google Sign-In is currently unavailable.</div>
+        }
 
         <p class="text-center mt-3 mb-0">
           Don’t have an account?

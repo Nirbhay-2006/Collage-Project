@@ -21,6 +21,7 @@ export class Login implements OnInit, OnDestroy {
   Isseen = false;
   IsLogin = false;
   IsGoogleLogin = false;
+  IsGoogleAvailable = true;
   authError = '';
   private googleClientId = '';
   private googleScript?: HTMLScriptElement;

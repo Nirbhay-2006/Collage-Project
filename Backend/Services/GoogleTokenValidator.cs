@@ -4,11 +4,11 @@ namespace ExamNest.Services
 {
     public class GoogleTokenValidator : IGoogleTokenValidator
     {
-        private readonly IConfiguration _configuration;
+        private readonly IGoogleAuthConfiguration _googleAuthConfiguration;
 
-        public GoogleTokenValidator(IConfiguration configuration)
+        public GoogleTokenValidator(IGoogleAuthConfiguration googleAuthConfiguration)
         {
-            _configuration = configuration;
+            _googleAuthConfiguration = googleAuthConfiguration;
         }
 
         public async Task<GoogleUserInfo?> ValidateAsync(string idToken)
@@ -17,7 +17,7 @@ namespace ExamNest.Services
             if (audiences.Length == 0)
             {
                 throw new InvalidOperationException(
-                    "Google OAuth client id is missing. Configure GoogleAuth:ClientId, Authentication:Google:ClientId, or GoogleAuth:AllowedClientIds.");
+                    "Google OAuth client id is missing. Configure GoogleAuth:FrontendClientId, GoogleAuth:ClientId, Authentication:Google:ClientId, or GoogleAuth:AllowedClientIds.");
             }
 
             try
@@ -43,16 +43,7 @@ namespace ExamNest.Services
 
         private string[] ResolveAllowedAudiences()
         {
-            var configuredClientIds = _configuration.GetSection("GoogleAuth:AllowedClientIds").Get<string[]>() ?? Array.Empty<string>();
-            var allCandidates = configuredClientIds
-                .Append(_configuration["GoogleAuth:ClientId"])
-                .Append(_configuration["Authentication:Google:ClientId"])
-                .Where(clientId => !string.IsNullOrWhiteSpace(clientId))
-                .Select(clientId => clientId!.Trim())
-                .Distinct(StringComparer.Ordinal)
-                .ToArray();
-
-            return allCandidates;
+            return _googleAuthConfiguration.GetAllowedAudiences();
         }
     }
 }
