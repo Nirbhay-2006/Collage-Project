@@ -67,7 +67,11 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddCors(opt => {
     opt.AddPolicy("AngularCord", policy =>
     {
-        policy.WithOrigins("http://localhost:4200").AllowAnyHeader().AllowAnyMethod();
+        policy.WithOrigins(
+                "http://localhost:4200",
+                "https://localhost:4200")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
     });
 });
 
