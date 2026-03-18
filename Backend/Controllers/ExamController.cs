@@ -11,7 +11,7 @@ namespace ExamNest.Controllers
 {
     [Route("api/[controller]/[action]")]
     [ApiController]
-    [Authorize(Roles = "Teacher")]
+    [Authorize(Roles = "Teacher,Admin")]
     public class ExamController : ControllerBase
     {
         private readonly ExamService _examservice;

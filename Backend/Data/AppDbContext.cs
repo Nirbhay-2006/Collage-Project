@@ -119,7 +119,7 @@ namespace ExamNest.Data
                 .HasOne(o => o.Course)
                 .WithMany()
                 .HasForeignKey(o => o.CourseId)
-                .OnDelete(DeleteBehavior.NoAction);
+                .OnDelete(DeleteBehavior.Restrict);
 
             // Payment -> Order
             modelBuilder.Entity<Payment>()

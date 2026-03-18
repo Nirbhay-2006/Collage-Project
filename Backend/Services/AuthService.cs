@@ -318,11 +318,12 @@ namespace ExamNest.Services
 
             try
             {
-                var user = await _context.Users
+                var user1 = await _context.Users
                     .Include(u => u.Role)
                     .FirstOrDefaultAsync(u => u.Email.ToLower() == normalizedEmail);
 
-                if (user == null)
+
+                if (user1 == null)
                 {
                     var studentRole = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName == "Student");
                     if (studentRole == null)
@@ -357,7 +358,7 @@ namespace ExamNest.Services
                 }
                 else
                 {
-                    if (!user.IsActive)
+                    if (user!.IsActive)
                     {
                         user.IsActive = true;
                     }

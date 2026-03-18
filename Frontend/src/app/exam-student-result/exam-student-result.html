@@ -3,7 +3,6 @@
 } @else {
   <div class="container mt-4">
     <h3 class="mb-4 text-primary">Exam Results</h3>
-
     <div class="row">
       @for (exam of examData; track exam.examId) {
         <div class="col-md-3 mb-3">
@@ -13,25 +12,13 @@
               class="card-img-top"
               style="height: 160px; object-fit: cover"
             />
-
             <div class="card-body">
-              <h5 class="card-title text-primary">
-                {{ exam.title }}
-              </h5>
-
-              <p class="text-muted small">
-                {{ exam.courseTitle }}
-              </p>
-
-              <p class="small">
-                {{ exam.description }}
-              </p>
-
+              <h5 class="card-title text-primary">{{ exam.title }}</h5>
+              <p class="text-muted small">{{ exam.courseTitle }}</p>
+              <p class="small">{{ exam.description }}</p>
               <div class="small mb-2">⏱ {{ exam.durationMinutes }} Minutes</div>
-
               <div class="small mb-2">❓ {{ exam.totalQuestions }} Questions</div>
             </div>
-
             <div class="card-footer bg-white border-0">
               @if (exam.status === 'Submitted') {
                 <button

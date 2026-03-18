@@ -3,7 +3,6 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { Router, RouterLink } from '@angular/router';
 import { LoginRegisterService } from '../Service/Login-Register/login-register-service';
 import { jwtDecode } from 'jwt-decode';
-import { HttpErrorResponse } from '@angular/common/http';
 
 declare global {
   interface Window {
@@ -17,14 +16,14 @@ declare global {
   templateUrl: './login.html',
   styleUrl: './login.css',
 })
+
 export class Login implements OnInit, OnDestroy {
   loginfrm!: FormGroup;
   Isseen = false;
   IsLogin = false;
   IsGoogleLogin = false;
-  IsGoogleAvailable = true;
   authError = '';
-  private googleClientId = '';
+  private readonly googleClientId = '385075083926-02b8nkgcnsbisntvgdnl5ac4mjfheif1.apps.googleusercontent.com';
   private googleScript?: HTMLScriptElement;
 
   constructor(
@@ -39,7 +38,7 @@ export class Login implements OnInit, OnDestroy {
       password: ['', Validators.required],
     });
 
-    this.loadGoogleClientId();
+    // this.loadGoogleAuthScript();
   }
 
   ngOnDestroy(): void {
@@ -72,97 +71,71 @@ export class Login implements OnInit, OnDestroy {
     });
   }
 
-  SignInWithGoogle() {
-    this.authError = '';
+  // SignInWithGoogle() {
+  //   this.authError = '';
 
-    if (!this.googleClientId) {
-      this.authError = 'Google Sign-In is not configured. Please contact support.';
-      return;
-    }
+  //   if (!window.google?.accounts?.id) {
+  //     this.authError = 'Google Sign-In is not ready yet. Please wait a second and try again.';
+  //     return;
+  //   }
 
-    if (!window.google?.accounts?.id) {
-      this.authError = 'Google Sign-In is not ready yet. Please wait a second and try again.';
-      return;
-    }
+  //   this.IsGoogleLogin = true;
+  //   window.google.accounts.id.prompt((notification: any) => {
+  //     if (notification?.isNotDisplayed?.() || notification?.isSkippedMoment?.()) {
+  //       this.IsGoogleLogin = false;
+  //     }
+  //   });
+  // }
 
-    this.IsGoogleLogin = true;
-    window.google.accounts.id.prompt((notification: any) => {
-      if (notification?.isNotDisplayed?.() || notification?.isSkippedMoment?.()) {
-        this.IsGoogleLogin = false;
-      }
-    });
-  }
+  // private loadGoogleAuthScript() {
+  //   if (document.getElementById('google-identity-script')) {
+  //     this.initializeGoogleAuth();
+  //     return;
+  //   }
 
-  private loadGoogleClientId() {
-    this.service.GetGoogleClientId().subscribe({
-      next: (response) => {
-        this.googleClientId = response?.clientId?.trim() ?? '';
+  //   const script = document.createElement('script');
+  //   script.id = 'google-identity-script';
+  //   script.src = 'https://accounts.google.com/gsi/client';
+  //   script.async = true;
+  //   script.defer = true;
+  //   script.onload = () => this.initializeGoogleAuth();
+  //   document.head.appendChild(script);
+  //   this.googleScript = script;
+  // }
 
-        if (!this.googleClientId) {
-          this.authError = 'Google Sign-In is not configured. Please contact support.';
-          return;
-        }
+  // private initializeGoogleAuth() {
+  //   if (!window.google?.accounts?.id) {
+  //     return;
+  //   }
 
-        this.loadGoogleAuthScript();
-      },
-      error: () => {
-        this.authError = 'Google Sign-In setup is unavailable right now. Please try email login.';
-      },
-    });
-  }
+  //   window.google.accounts.id.initialize({
+  //     client_id: this.googleClientId,
+  //     callback: (response: any) => this.onGoogleCredentialResponse(response),
+  //     auto_select: false,
+  //     cancel_on_tap_outside: true,
+  //   });
+  // }
 
-  private loadGoogleAuthScript() {
-    if (document.getElementById('google-identity-script')) {
-      this.initializeGoogleAuth();
-      return;
-    }
+  // private onGoogleCredentialResponse(response: any) {
+  //   const idToken = response?.credential;
 
-    const script = document.createElement('script');
-    script.id = 'google-identity-script';
-    script.src = 'https://accounts.google.com/gsi/client';
-    script.async = true;
-    script.defer = true;
-    script.onload = () => this.initializeGoogleAuth();
-    document.head.appendChild(script);
-    this.googleScript = script;
-  }
+  //   if (!idToken) {
+  //     this.IsGoogleLogin = false;
+  //     this.authError = 'Unable to read Google credentials. Please try again.';
+  //     return;
+  //   }
 
-  private initializeGoogleAuth() {
-    if (!window.google?.accounts?.id) {
-      return;
-    }
-
-    window.google.accounts.id.initialize({
-      client_id: this.googleClientId,
-      callback: (response: any) => this.onGoogleCredentialResponse(response),
-      auto_select: false,
-      cancel_on_tap_outside: true,
-    });
-  }
-
-  private onGoogleCredentialResponse(response: any) {
-    const idToken = response?.credential;
-
-    if (!idToken) {
-      this.IsGoogleLogin = false;
-      this.authError = 'Unable to read Google credentials. Please try again.';
-      return;
-    }
-
-    this.service.GoogleLogin(idToken).subscribe({
-      next: (res) => {
-        this.IsGoogleLogin = false;
-        this.handleAuthSuccess(res.token);
-      },
-      error: (error: HttpErrorResponse) => {
-        this.IsGoogleLogin = false;
-        const backendMessage = error?.error?.message;
-        this.authError = backendMessage && typeof backendMessage === 'string'
-          ? backendMessage
-          : 'Google login failed. Please verify OAuth client ID and try again.';
-      },
-    });
-  }
+  //   this.service.GoogleLogin(idToken).subscribe({
+  //     next: (res) => {
+  //       this.IsGoogleLogin = false;
+  //       this.handleAuthSuccess(res.token);
+  //     },
+  //     error: () => {
+  //       this.IsGoogleLogin = false;
+  //       this.authError = 'Google login failed. Please try email login or retry.';
+  //     },
+  //   });
+  // }
 
   private handleAuthSuccess(token: string) {
     localStorage.setItem('token', token);

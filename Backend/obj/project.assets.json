@@ -5223,11 +5223,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "E:\\examplatform\\nirbhay\\Backend\\ExamNest.csproj",
+      "projectUniqueName": "E:\\examplatform\\Collage-Project\\Backend\\ExamNest.csproj",
       "projectName": "ExamNest",
-      "projectPath": "E:\\examplatform\\nirbhay\\Backend\\ExamNest.csproj",
+      "projectPath": "E:\\examplatform\\Collage-Project\\Backend\\ExamNest.csproj",
       "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
-      "outputPath": "E:\\examplatform\\nirbhay\\Backend\\obj\\",
+      "outputPath": "E:\\examplatform\\Collage-Project\\Backend\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

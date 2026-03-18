@@ -17,6 +17,7 @@ namespace ExamNest.Controllers
 {
     [Route("api/[controller]/[action]")]
     [ApiController]
+    [Authorize(Roles = "Teacher,Admin")]
     public class TeacherController : ControllerBase
     {
         private const long MaxThumbnailSizeBytes = 5 * 1024 * 1024;
@@ -461,6 +462,57 @@ namespace ExamNest.Controllers
 				totalEarning = totalEarning
 			});
 		}
+
+		[HttpGet("course/{courseId}/students")]
+		public IActionResult GetStudentsByCourse(int courseId)
+		{
+			var students = (from c in _context.Courses
+							join s in _context.Subscriptions
+								on c.CourseId equals s.CourseId
+							join u in _context.Users
+								on s.StudentId equals u.UserId
+							where s.CourseId == courseId
+							orderby c.Title, u.Username
+							select new
+							{
+								c.CourseId,
+								c.Title,
+								u.UserId,
+								StudentName = u.Username,
+								u.Email,
+								u.Phone
+							}).ToList();
+
+			return Ok(students);
+		}
+
+		[HttpGet("exams/{examId}/students")]
+		public async Task<IActionResult> GetStudentsByExam(int examId)
+		{
+			var result = await _context.ExamAttempts
+				.Where(e => e.ExamId == examId)
+				.Join(_context.Users,
+					ea => ea.StudentId,
+					u => u.UserId,
+					(ea, u) => new
+					{
+						u.UserId,
+						u.FirstName,
+						u.LastName,
+						u.Email,
+						ea.ExamAttemptId,
+						ea.StartedAt,
+						ea.SubmittedAt,
+						ea.Status,
+						ea.TotalScore,
+						ea.MaxScore
+					})
+				.ToListAsync();
+
+			return Ok(result);
+		}
+
+		
 
 
 		private int GetTeacherId()

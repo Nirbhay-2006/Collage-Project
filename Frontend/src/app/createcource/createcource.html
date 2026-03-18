@@ -6,71 +6,98 @@
     </div>
 
     <form [formGroup]="courseForm" (ngSubmit)="onSubmit()">
+      <!-- Title -->
+      <div class="form-group">
+        <label>Course Title</label>
+        <input type="text" formControlName="title" />
 
-      <!-- Basic Info -->
-      <div class="section">
-        <h4>Basic Information</h4>
-
-        <div class="form-group">
-          <label>Course Title</label>
-          <input type="text" formControlName="title" placeholder="Enter course title" />
-        </div>
-
-        <div class="form-group">
-          <label>Description</label>
-          <textarea rows="4" formControlName="description"
-            placeholder="Write short description about course"></textarea>
-        </div>
+        @if (courseForm.get('title')?.touched && courseForm.get('title')?.invalid) {
+          <div class="text-danger">Title is required.</div>
+        }
       </div>
 
+      <!-- Description -->
+      <div class="form-group">
+        <label>Description</label>
+        <textarea formControlName="description"></textarea>
 
-      <!-- Course Details -->
-      <div class="section">
-        <h4>Course Details</h4>
-
-        <div class="form-row">
-
-          <div class="form-group">
-            <label>Start Date</label>
-            <input type="date" formControlName="startDate" />
-          </div>
-
-          <div class="form-group">
-            <label>End Date</label>
-            <input type="date" formControlName="endDate" />
-          </div>
-
-          <div class="form-group">
-            <label>Fees (₹)</label>
-            <input type="number" formControlName="fees" placeholder="Enter course fees" />
-          </div>
-
-        </div>
-
-
-        <!-- Thumbnail -->
-        <div class="form-group">
-          <label>Thumbnail Image</label>
-          <input type="file" (change)="onThumbnailChange($event)" accept="image/*" />
-        </div>
-
-
-        <!-- Course Files -->
-        <div class="form-group">
-          <label>Upload Videos / Files</label>
-          <input type="file" #fileInput multiple (change)="onFileChange($event)" />
-        </div>
-
+        @if (courseForm.get('description')?.touched && courseForm.get('description')?.invalid) {
+          <div class="text-danger">Description is required.</div>
+        }
       </div>
 
+      <!-- Start Date -->
+      <div class="form-group">
+        <label>Start Date</label>
+        <input type="date" formControlName="startDate" />
+
+        @if (courseForm.get('startDate')?.touched && courseForm.get('startDate')?.invalid) {
+          <div class="text-danger">Start date is required.</div>
+        }
+      </div>
+
+      <!-- End Date -->
+      <div class="form-group">
+        <label>End Date</label>
+        <input type="date" formControlName="endDate" />
+
+        @if (courseForm.get('endDate')?.touched && courseForm.get('endDate')?.invalid) {
+          <div class="text-danger">End date is required.</div>
+        }
+      </div>
+
+      <!-- Fees -->
+      <div class="form-group">
+        <label>Fees</label>
+        <input type="number" formControlName="fees" />
+
+        @if (courseForm.get('fees')?.touched && courseForm.get('fees')?.errors) {
+          <div class="text-danger">
+            @if (courseForm.get('fees')?.errors?.['required']) {
+              <div>Fees is required.</div>
+            }
+            @if (courseForm.get('fees')?.errors?.['min']) {
+              <div>Fees cannot be negative.</div>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Thumbnail -->
+      <div class="form-group">
+        <label>Thumbnail</label>
+        <input type="file" accept="image/*" (change)="onThumbnailChange($event)" />
+
+        <small>Only image files allowed (jpg, png, webp). Max size 5 MB.</small>
+
+        @if (thumbnailError) {
+          <div class="text-danger">{{ thumbnailError }}</div>
+        }
+      </div>
+
+      <!-- Videos -->
+      <div class="form-group">
+        <label>Videos</label>
+        <input type="file" multiple #fileInput (change)="onFileChange($event)" />
+
+        <small>Each video must be greater than 0 and at most 100 MB.</small>
+
+        @if (fileErrors.length > 0) {
+          <div class="text-danger">
+            @for (err of fileErrors; track err) {
+              <div>{{ err }}</div>
+            }
+          </div>
+        }
+      </div>
 
       <!-- Submit -->
-      <div class="submit-section">
-        <button type="submit" [disabled]="courseForm.invalid || isUploading">
-          {{isUploading ? 'Uploading Course...' : 'Publish Course'}}
-        </button>
-      </div>
-
+      <button
+        type="submit"
+        [disabled]="courseForm.invalid || thumbnailError || fileErrors.length > 0 || isUploading"
+      >
+        {{ isUploading ? 'Uploading...' : 'Create Course' }}
+      </button>
     </form>
   </div>
 </div>

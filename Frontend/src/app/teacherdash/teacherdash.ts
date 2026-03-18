@@ -29,17 +29,40 @@ export class Teacherdash {
 
   displayedColumns: string[] = ['title', 'students', 'status', 'revenue', 'actions'];
   totalcourse: any;
-  totalStudents:any;
+  totalStudents: any;
   totalexam: any;
   totalEarning: any;
 
-  constructor(private service: Teacherservice,private cd : ChangeDetectorRef) {}
+  constructor(
+    private service: Teacherservice,
+    private cd: ChangeDetectorRef,
+  ) {}
 
+  username = '';
   ngOnInit(): void {
     this.Gettotalcourses();
     this.GetTotalEarnings();
     this.GetTotalExam();
     this.GetTotalStudent();
+    const token = localStorage.getItem('token');
+
+    if (token) {
+      const payload = this.decodeToken(token);
+
+      this.username = payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'];
+      console.log('Username:', this.username);
+    }
+  }
+
+  decodeToken(token: string): any {
+    try {
+      const payload = token.split('.')[1]; // get payload
+      const decoded = atob(payload); // base64 decode
+      return JSON.parse(decoded);
+    } catch (error) {
+      console.log('Invalid token', error);
+      return null;
+    }
   }
 
   publishCourse(id: number) {

@@ -17,6 +17,9 @@ export class Createcource {
   selectedFiles: File[] = [];
   thumbnailFile!: File;
 
+  thumbnailError: string = '';
+  fileErrors: string[] = [];
+
   @ViewChild('fileInput') fileInput!: ElementRef;
 
   isUploading = false;
@@ -31,33 +34,53 @@ export class Createcource {
       description: ['', Validators.required],
       startDate: ['', Validators.required],
       endDate: ['', Validators.required],
-      fees: [0, [Validators.required, Validators.min(0)]],
+      fees: [null, [Validators.required, Validators.min(0)]],
     });
 
   }
 
-
-  onFileChange(event: any) {
-
-    if (event.target.files.length > 0) {
-      this.selectedFiles = Array.from(event.target.files);
-    }
-
-  }
-
-
+  // ✅ Thumbnail Validation
   onThumbnailChange(event: any) {
+    this.thumbnailError = '';
 
-    if (event.target.files.length > 0) {
-      this.thumbnailFile = event.target.files[0];
+    const file = event.target.files[0];
+
+    if (!file) return;
+
+    if (file.size <= 0 || file.size > 5 * 1024 * 1024) {
+      this.thumbnailError = 'Thumbnail must be greater than 0 and at most 5 MB.';
+      this.thumbnailFile = undefined as any;
+      return;
     }
 
+    this.thumbnailFile = file;
   }
 
+  // ✅ Video Validation
+  onFileChange(event: any) {
+    this.fileErrors = [];
+    this.selectedFiles = [];
 
+    const files = Array.from(event.target.files) as File[];
+
+    files.forEach(file => {
+      if (file.size <= 0 || file.size > 5 * 1024 * 1024) {
+        this.fileErrors.push(`${file.name} must be between 0 and 5 MB.`);
+      } else {
+        this.selectedFiles.push(file);
+      }
+    });
+  }
+
+  // ✅ Submit
   onSubmit() {
 
-    if (this.courseForm.invalid) return;
+    // mark all fields touched
+    this.courseForm.markAllAsTouched();
+
+    if (this.courseForm.invalid || this.thumbnailError || this.fileErrors.length > 0) {
+      return;
+    }
 
     const formData = new FormData();
 
@@ -79,23 +102,21 @@ export class Createcource {
 
     this.service.CreateCourses(formData).subscribe({
 
-      next: (res) => {
-
+      next: () => {
         this.isUploading = false;
 
         this.courseForm.reset();
         this.selectedFiles = [];
         this.thumbnailFile = undefined as any;
+        this.thumbnailError = '';
+        this.fileErrors = [];
 
         this.fileInput.nativeElement.value = '';
-
       },
 
       error: (err) => {
-
         this.isUploading = false;
         console.error(err);
-
       }
 
     });

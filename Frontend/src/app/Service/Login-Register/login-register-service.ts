@@ -1,3 +1,4 @@
+import { Login } from './../../login/login';
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 
@@ -23,8 +24,6 @@ export class LoginRegisterService {
     return this.http.post<any>('https://localhost:44385/api/Auth/google-login', { idToken });
   }
 
-  GetGoogleClientId() {
-    return this.http.get<{ clientId: string }>('https://localhost:44385/api/Auth/google-client-id');
-  }
-}
 
+
+}

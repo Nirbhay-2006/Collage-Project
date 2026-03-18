@@ -16,7 +16,7 @@ namespace ExamNest.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "Student")]
+    [Authorize(Roles = "Teacher,Admin,Student")]
     public class StudentController : ControllerBase
     {
         private static readonly HashSet<string> SevereViolationEvents = new(StringComparer.OrdinalIgnoreCase)

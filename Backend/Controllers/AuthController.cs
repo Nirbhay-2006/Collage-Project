@@ -142,5 +142,8 @@ namespace ExamNest.Controllers
 
             return Ok(new { clientId = googleClientId });
         }
+
+        
+
     }
 }

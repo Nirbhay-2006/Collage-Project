@@ -68,4 +68,13 @@ export class Teacherservice {
   GetTotalEarnings(){
     return this.http.get('https://localhost:44385/api/Teacher/GetTotalEarnings/GetTotalEarnings');
   }
+
+  //
+  GetStudentCourseWise(courseId : number){
+    return this.http.get(`https://localhost:44385/api/Teacher/GetStudentsByCourse/course/${courseId}/students`);
+  }
+
+  GetStudentByExam(examId : number){
+    return this.http.get(`https://localhost:44385/api/Teacher/GetStudentsByExam/exams/${examId}/students`);
+  }
 }

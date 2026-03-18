@@ -1,18 +1,20 @@
-﻿using ExamNest.Data;
+﻿using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
+using ExamNest.Data;
 using ExamNest.Models.DTOs.Payment;
 using ExamNest.Models.Payment;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Razorpay.Api;
-using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace ExamNest.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class PaymentController : ControllerBase
+	[Authorize(Roles = "Admin,Teacher,Student")]
+	public class PaymentController : ControllerBase
     {
         private readonly IConfiguration _config;
         private readonly AppDbContext _context;

@@ -23,6 +23,11 @@ import { StudentExamAttempt } from './student-exam-attempt/student-exam-attempt'
 import { ExamStudentResult } from './exam-student-result/exam-student-result';
 import { Resultsheet } from './resultsheet/resultsheet';
 import { Routes } from '@angular/router';
+import { Coursewisestudent } from './coursewisestudent/coursewisestudent';
+import { Studentexamwise } from './studentexamwise/studentexamwise';
+import { ManagePayment } from './manage-payment/manage-payment';
+import { ManageExmas } from './manage-exmas/manage-exmas';
+import { Rolemanage } from './rolemanage/rolemanage';
 
 export const routes: Routes = [
   // public paths
@@ -41,6 +46,9 @@ export const routes: Routes = [
       { path: 'main-teacher', component: Teachermain },
       { path: 'main-student', component: Studentmain },
       { path: 'course-manage', component: Admincoursemanage },
+      { path: 'payment-manage', component: ManagePayment },
+      { path: 'exams-manage', component: ManageExmas},
+      { path: 'role-manage', component: Rolemanage}
     ],
   },
   // teacher side
@@ -54,6 +62,8 @@ export const routes: Routes = [
       { path: 'exam-list', component: TeacherExamList },
       { path: 'my-subscriber', component: Mysubscriber },
       { path: 'profile', component: TeacherProfile },
+      { path: 'studentcoursewise', component: Coursewisestudent},
+      { path: 'studentexamwise', component: Studentexamwise }
     ],
   },
   // admin side
@@ -68,7 +78,7 @@ export const routes: Routes = [
       { path: 'student-exam', component: Studentexam },
       {path: 'student-exam-attempt',component: StudentExamAttempt},
       {path: 'student-exam-result',component: ExamStudentResult},
-      {path: 'student-result/:examId/:attemptId',component: Resultsheet}
+      {path: 'student-result/:examId/:attemptId',component: Resultsheet},
     ],
   },
 ];

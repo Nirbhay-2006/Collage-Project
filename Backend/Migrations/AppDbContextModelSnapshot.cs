@@ -708,7 +708,7 @@ namespace ExamNest.Migrations
             modelBuilder.Entity("ExamNest.Models.ExamAttempt", b =>
                 {
                     b.HasOne("ExamNest.Models.Exam", "Exam")
-                        .WithMany()
+                        .WithMany("ExamAttempts")
                         .HasForeignKey("ExamId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -770,7 +770,7 @@ namespace ExamNest.Migrations
                     b.HasOne("ExamNest.Models.Course", "Course")
                         .WithMany()
                         .HasForeignKey("CourseId")
-                        .OnDelete(DeleteBehavior.NoAction)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("ExamNest.Models.User", "Student")
@@ -843,6 +843,8 @@ namespace ExamNest.Migrations
 
             modelBuilder.Entity("ExamNest.Models.Exam", b =>
                 {
+                    b.Navigation("ExamAttempts");
+
                     b.Navigation("Questions");
                 });
 
