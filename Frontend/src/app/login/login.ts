@@ -21,8 +21,9 @@ export class Login implements OnInit, OnDestroy {
   Isseen = false;
   IsLogin = false;
   IsGoogleLogin = false;
+  IsGoogleAvailable = true;
   authError = '';
-  private readonly googleClientId = '385075083926-02b8nkgcnsbisntvgdnl5ac4mjfheif1.apps.googleusercontent.com';
+  private googleClientId = '';
   private googleScript?: HTMLScriptElement;
 
   constructor(
@@ -37,7 +38,7 @@ export class Login implements OnInit, OnDestroy {
       password: ['', Validators.required],
     });
 
-    this.loadGoogleAuthScript();
+    this.loadGoogleClientId();
   }
 
   ngOnDestroy(): void {
@@ -73,6 +74,11 @@ export class Login implements OnInit, OnDestroy {
   SignInWithGoogle() {
     this.authError = '';
 
+    if (!this.googleClientId) {
+      this.authError = 'Google Sign-In is not configured. Please contact support.';
+      return;
+    }
+
     if (!window.google?.accounts?.id) {
       this.authError = 'Google Sign-In is not ready yet. Please wait a second and try again.';
       return;
@@ -83,6 +89,26 @@ export class Login implements OnInit, OnDestroy {
       if (notification?.isNotDisplayed?.() || notification?.isSkippedMoment?.()) {
         this.IsGoogleLogin = false;
       }
+    });
+  }
+
+  private loadGoogleClientId() {
+    this.service.GetGoogleClientId().subscribe({
+      next: (response) => {
+        this.googleClientId = response?.clientId?.trim() ?? '';
+
+        if (!this.googleClientId) {
+          this.IsGoogleAvailable = false;
+          this.authError = 'Google Sign-In is not configured. Please contact support.';
+          return;
+        }
+
+        this.loadGoogleAuthScript();
+      },
+      error: () => {
+        this.IsGoogleAvailable = false;
+        this.authError = 'Google Sign-In setup is unavailable right now. Please try email login.';
+      },
     });
   }
 

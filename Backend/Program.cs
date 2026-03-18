@@ -99,6 +99,7 @@ builder.Services.Configure<FormOptions>(options =>
 // Register Business Services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
+builder.Services.AddSingleton<IGoogleAuthConfiguration, GoogleAuthConfiguration>();
 builder.Services.AddScoped<IGoogleTokenValidator, GoogleTokenValidator>();
 builder.Services.AddScoped<AdminServices>();
 builder.Services.AddScoped<Student>();
