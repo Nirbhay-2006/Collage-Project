@@ -9,10 +9,12 @@ namespace ExamNest.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
+        private readonly IConfiguration _configuration;
 
-        public AuthController(IAuthService authService)
+        public AuthController(IAuthService authService, IConfiguration configuration)
         {
             _authService = authService;
+            _configuration = configuration;
         }
 
         [HttpPost("register")]
@@ -120,6 +122,25 @@ namespace ExamNest.Controllers
                 return Unauthorized(result);
 
             return Ok(result);
+        }
+
+        [HttpGet("google-client-id")]
+        public IActionResult GetGoogleClientId()
+        {
+            var configuredClientIds = _configuration.GetSection("GoogleAuth:AllowedClientIds").Get<string[]>() ?? Array.Empty<string>();
+
+            var googleClientId = configuredClientIds
+                .Append(_configuration["GoogleAuth:ClientId"])
+                .Append(_configuration["Authentication:Google:ClientId"])
+                .FirstOrDefault(id => !string.IsNullOrWhiteSpace(id))
+                ?.Trim();
+
+            if (string.IsNullOrWhiteSpace(googleClientId))
+            {
+                return NotFound(new { message = "Google OAuth client id is not configured." });
+            }
+
+            return Ok(new { clientId = googleClientId });
         }
     }
 }
