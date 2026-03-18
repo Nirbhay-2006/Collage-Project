@@ -154,7 +154,7 @@ namespace ExamNest.Controllers
 
                         await using (var stream = new FileStream(filePath, FileMode.Create))
                         {
-                            await file.CopyToAsync(stream, RequestAborted);
+                            await file.CopyToAsync(stream, HttpContext.RequestAborted);
                         }
 
                         savedFiles.Add(filePath);

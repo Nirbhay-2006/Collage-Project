@@ -17,7 +17,7 @@ namespace ExamNest.Services
             if (audiences.Length == 0)
             {
                 throw new InvalidOperationException(
-                    "Google OAuth client id is missing. Configure GoogleAuth:AllowedClientIds (array or CSV), GoogleAuth:ClientId, or Authentication:Google:ClientId.");
+                    "Google OAuth client id is missing. Configure GoogleAuth:ClientId, Authentication:Google:ClientId, or GoogleAuth:AllowedClientIds.");
             }
 
             try
@@ -44,20 +44,15 @@ namespace ExamNest.Services
         private string[] ResolveAllowedAudiences()
         {
             var configuredClientIds = _configuration.GetSection("GoogleAuth:AllowedClientIds").Get<string[]>() ?? Array.Empty<string>();
-            var configuredClientIdsCsv = _configuration["GoogleAuth:AllowedClientIdsCsv"];
-
-            var csvClientIds = string.IsNullOrWhiteSpace(configuredClientIdsCsv)
-                ? Array.Empty<string>()
-                : configuredClientIdsCsv.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-
-            return configuredClientIds
-                .Concat(csvClientIds)
+            var allCandidates = configuredClientIds
                 .Append(_configuration["GoogleAuth:ClientId"])
                 .Append(_configuration["Authentication:Google:ClientId"])
                 .Where(clientId => !string.IsNullOrWhiteSpace(clientId))
                 .Select(clientId => clientId!.Trim())
                 .Distinct(StringComparer.Ordinal)
                 .ToArray();
+
+            return allCandidates;
         }
     }
 }
