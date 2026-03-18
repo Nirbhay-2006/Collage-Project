@@ -6,6 +6,7 @@ using ExamNest.Data;
 using ExamNest.Models;
 using ExamNest.Models.DTOs;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Data.SqlClient;
 using Microsoft.IdentityModel.Tokens;
 
 namespace ExamNest.Services
@@ -315,75 +316,100 @@ namespace ExamNest.Services
                 .Include(u => u.Role)
                 .FirstOrDefaultAsync(u => u.Email.ToLower() == normalizedEmail);
 
-            if (user == null)
+            try
             {
-                var studentRole = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName == "Student");
-                if (studentRole == null)
+                var user = await _context.Users
+                    .Include(u => u.Role)
+                    .FirstOrDefaultAsync(u => u.Email.ToLower() == normalizedEmail);
+
+                if (user == null)
                 {
-                    return new AuthResponseDto { Success = false, Message = "Student role not found." };
+                    var studentRole = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName == "Student");
+                    if (studentRole == null)
+                    {
+                        return new AuthResponseDto { Success = false, Message = "Student role not found." };
+                    }
+
+                    var baseUsername = BuildBaseUsername(normalizedEmail, googleUser.GivenName, googleUser.FamilyName);
+                    var uniqueUsername = await GenerateUniqueUsernameAsync(baseUsername);
+
+                    user = new User
+                    {
+                        FirstName = string.IsNullOrWhiteSpace(googleUser.GivenName) ? "Google" : googleUser.GivenName.Trim(),
+                        LastName = string.IsNullOrWhiteSpace(googleUser.FamilyName) ? "User" : googleUser.FamilyName.Trim(),
+                        Email = normalizedEmail,
+                        Username = uniqueUsername,
+                        PasswordHash = null,
+                        Phone = null,
+                        RoleId = studentRole.RoleId,
+                        IsActive = true,
+                        FailedLoginAttempts = 0,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow
+                    };
+
+                    _context.Users.Add(user);
+                    await _context.SaveChangesAsync();
+
+                    user = await _context.Users
+                        .Include(u => u.Role)
+                        .FirstAsync(u => u.UserId == user.UserId);
+                }
+                else
+                {
+                    if (!user.IsActive)
+                    {
+                        user.IsActive = true;
+                    }
                 }
 
-                var baseUsername = BuildBaseUsername(normalizedEmail, googleUser.GivenName, googleUser.FamilyName);
-                var uniqueUsername = await GenerateUniqueUsernameAsync(baseUsername);
+                var existingGoogleAuth = await _context.UserGoogleAuths
+                    .FirstOrDefaultAsync(g => g.UserId == user.UserId);
 
-                user = new User
+                if (existingGoogleAuth == null)
                 {
-                    FirstName = string.IsNullOrWhiteSpace(googleUser.GivenName) ? "Google" : googleUser.GivenName.Trim(),
-                    LastName = string.IsNullOrWhiteSpace(googleUser.FamilyName) ? "User" : googleUser.FamilyName.Trim(),
-                    Email = normalizedEmail,
-                    Username = uniqueUsername,
-                    PasswordHash = null,
-                    Phone = null,
-                    RoleId = studentRole.RoleId,
-                    IsActive = true,
-                    FailedLoginAttempts = 0,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
-                };
+                    _context.UserGoogleAuths.Add(new UserGoogleAuth
+                    {
+                        UserId = user.UserId,
+                        GoogleSub = googleUser.Subject,
+                        GoogleEmail = normalizedEmail,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow
+                    });
+                }
+                else
+                {
+                    existingGoogleAuth.GoogleSub = googleUser.Subject;
+                    existingGoogleAuth.GoogleEmail = normalizedEmail;
+                    existingGoogleAuth.UpdatedAt = DateTime.UtcNow;
+                }
 
-                _context.Users.Add(user);
+                user.LastLoginAt = DateTime.UtcNow;
+                user.FailedLoginAttempts = 0;
+                user.UpdatedAt = DateTime.UtcNow;
                 await _context.SaveChangesAsync();
 
-                user = await _context.Users
-                    .Include(u => u.Role)
-                    .FirstAsync(u => u.UserId == user.UserId);
+                var token = GenerateJwtToken(user);
+                return BuildSuccessLoginResponse(user, token, "Google login successful.");
             }
-            else
+            catch (SqlException ex)
             {
-                if (!user.IsActive)
+                _logger.LogError(ex, "Database connection failed during Google login for {GoogleEmail}", normalizedEmail);
+                return new AuthResponseDto
                 {
-                    user.IsActive = true;
-                }
+                    Success = false,
+                    Message = "Database connection failed. Verify SQL Server is running, reachable, and the connection string is correct."
+                };
             }
-
-            var existingGoogleAuth = await _context.UserGoogleAuths
-                .FirstOrDefaultAsync(g => g.UserId == user.UserId);
-
-            if (existingGoogleAuth == null)
+            catch (DbUpdateException ex)
             {
-                _context.UserGoogleAuths.Add(new UserGoogleAuth
+                _logger.LogError(ex, "Database update failed during Google login for {GoogleEmail}", normalizedEmail);
+                return new AuthResponseDto
                 {
-                    UserId = user.UserId,
-                    GoogleSub = googleUser.Subject,
-                    GoogleEmail = normalizedEmail,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
-                });
+                    Success = false,
+                    Message = "Unable to complete Google login due to a database update error."
+                };
             }
-            else
-            {
-                existingGoogleAuth.GoogleSub = googleUser.Subject;
-                existingGoogleAuth.GoogleEmail = normalizedEmail;
-                existingGoogleAuth.UpdatedAt = DateTime.UtcNow;
-            }
-
-            user.LastLoginAt = DateTime.UtcNow;
-            user.FailedLoginAttempts = 0;
-            user.UpdatedAt = DateTime.UtcNow;
-            await _context.SaveChangesAsync();
-
-            var token = GenerateJwtToken(user);
-            return BuildSuccessLoginResponse(user, token, "Google login successful.");
         }
 
         private async Task<string> CreateAndStoreOtpAsync(int userId)
