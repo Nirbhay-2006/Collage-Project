@@ -312,6 +312,9 @@ namespace ExamNest.Services
 
             var normalizedEmail = googleUser.Email.Trim().ToLowerInvariant();
             _logger.LogInformation("Google login payload received for email {GoogleEmail}", normalizedEmail);
+            var user = await _context.Users
+                .Include(u => u.Role)
+                .FirstOrDefaultAsync(u => u.Email.ToLower() == normalizedEmail);
 
             try
             {
