@@ -14,7 +14,9 @@ namespace ExamNest.Services
     {
         private const int MaxFailedAttempts = 5;
         private const int OtpExpiryMinutes = 10;
+        private const int ForgotPasswordResetWindowMinutes = 15;
         private static readonly ConcurrentDictionary<string, string> PendingLoginPasswords = new();
+        private static readonly ConcurrentDictionary<string, DateTime> PasswordResetOtpVerifiedUntil = new();
 
         private readonly AppDbContext _context;
         private readonly IConfiguration _configuration;
@@ -94,7 +96,7 @@ namespace ExamNest.Services
             PendingLoginPasswords[normalizedEmail] = request.Password;
 
             var otp = await CreateAndStoreOtpAsync(user.UserId);
-            await SendOtpEmailAsync(user.Email, otp);
+            await SendOtpEmailAsync(user.Email, otp, "ExamNest Email Verification OTP");
 
             return new AuthResponseDto
             {
@@ -154,9 +156,92 @@ namespace ExamNest.Services
             }
 
             var otp = await CreateAndStoreOtpAsync(user.UserId);
-            await SendOtpEmailAsync(user.Email, otp);
+            await SendOtpEmailAsync(user.Email, otp, "ExamNest Email Verification OTP");
 
             return new AuthResponseDto { Success = true, Message = "OTP sent successfully." };
+        }
+
+        public async Task<AuthResponseDto> ForgotPasswordAsync(ForgotPasswordRequestDto request)
+        {
+            var normalizedEmail = request.Email.Trim().ToLowerInvariant();
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == normalizedEmail);
+
+            if (user == null)
+            {
+                return new AuthResponseDto { Success = false, Message = "User not found." };
+            }
+
+            if (!user.IsActive)
+            {
+                return new AuthResponseDto { Success = false, Message = "Email not verified. Verify OTP first." };
+            }
+
+            var otp = await CreateAndStoreOtpAsync(user.UserId);
+            await SendOtpEmailAsync(user.Email, otp, "ExamNest Password Reset OTP");
+
+            PasswordResetOtpVerifiedUntil.TryRemove(normalizedEmail, out _);
+            return new AuthResponseDto { Success = true, Message = "Password reset OTP sent successfully." };
+        }
+
+        public async Task<AuthResponseDto> VerifyForgotPasswordOtpAsync(VerifyForgotPasswordOtpRequestDto request)
+        {
+            var normalizedEmail = request.Email.Trim().ToLowerInvariant();
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == normalizedEmail);
+
+            if (user == null)
+            {
+                return new AuthResponseDto { Success = false, Message = "User not found." };
+            }
+
+            var otpRecord = await _context.EmailOtps
+                .Where(o => o.UserId == user.UserId && !o.IsUsed)
+                .OrderByDescending(o => o.CreatedAt)
+                .FirstOrDefaultAsync();
+
+            if (otpRecord == null || otpRecord.ExpiresAt < DateTime.UtcNow)
+            {
+                return new AuthResponseDto { Success = false, Message = "OTP expired. Request a new OTP." };
+            }
+
+            if (!BCrypt.Net.BCrypt.Verify(request.Otp, otpRecord.OtpHash))
+            {
+                return new AuthResponseDto { Success = false, Message = "Invalid OTP." };
+            }
+
+            otpRecord.IsUsed = true;
+            user.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            PasswordResetOtpVerifiedUntil[normalizedEmail] = DateTime.UtcNow.AddMinutes(ForgotPasswordResetWindowMinutes);
+            return new AuthResponseDto { Success = true, Message = "OTP verified. You can now reset your password." };
+        }
+
+        public async Task<AuthResponseDto> ResetPasswordAsync(ResetPasswordRequestDto request)
+        {
+            var normalizedEmail = request.Email.Trim().ToLowerInvariant();
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == normalizedEmail);
+
+            if (user == null)
+            {
+                return new AuthResponseDto { Success = false, Message = "User not found." };
+            }
+
+            if (!PasswordResetOtpVerifiedUntil.TryGetValue(normalizedEmail, out var verifiedUntil) ||
+                verifiedUntil < DateTime.UtcNow)
+            {
+                PasswordResetOtpVerifiedUntil.TryRemove(normalizedEmail, out _);
+                return new AuthResponseDto { Success = false, Message = "Verify forgot password OTP before resetting password." };
+            }
+
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+            user.FailedLoginAttempts = 0;
+            user.IsActive = true;
+            user.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+            PasswordResetOtpVerifiedUntil.TryRemove(normalizedEmail, out _);
+
+            return new AuthResponseDto { Success = true, Message = "Password updated successfully." };
         }
 
         public async Task<AuthResponseDto> LoginAsync(LoginRequestDto request)
@@ -306,9 +391,8 @@ namespace ExamNest.Services
             return otp;
         }
 
-        private async Task SendOtpEmailAsync(string email, string otp)
+        private async Task SendOtpEmailAsync(string email, string otp, string subject)
         {
-            var subject = "ExamNest Email Verification OTP";
             var body = EmailTemplateBuilder.BuildOtpEmail(otp, OtpExpiryMinutes);
             await _emailSender.SendEmailAsync(email, subject, body, isBodyHtml: true);
         }

@@ -20,7 +20,7 @@ namespace ExamNest.Controllers
     public class TeacherController : ControllerBase
     {
         private const long MaxThumbnailSizeBytes = 5 * 1024 * 1024;
-        private const long MaxVideoSizeBytes = 500 * 1024 * 1024;
+        private const long MaxVideoSizeBytes = 300 * 1024 * 1024;
         private const long MaxCourseUploadRequestSizeBytes = 2L * 1024 * 1024 * 1024;
 
         private static readonly HashSet<string> AllowedThumbnailExtensions =
@@ -114,7 +114,7 @@ namespace ExamNest.Controllers
                         return BadRequest("Video files cannot be empty.");
 
                     if (file.Length > MaxVideoSizeBytes)
-                        return BadRequest($"Video '{file.FileName}' exceeds the 500 MB size limit.");
+                        return BadRequest($"Video '{file.FileName}' exceeds the 300 MB size limit.");
 
                     var extension = Path.GetExtension(file.FileName);
                     if (!AllowedVideoExtensions.Contains(extension))
