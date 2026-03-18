@@ -22,17 +22,20 @@ namespace ExamNest.Services
         private readonly IConfiguration _configuration;
         private readonly IEmailSender _emailSender;
         private readonly IGoogleTokenValidator _googleTokenValidator;
+        private readonly ILogger<AuthService> _logger;
 
         public AuthService(
             AppDbContext context,
             IConfiguration configuration,
             IEmailSender emailSender,
-            IGoogleTokenValidator googleTokenValidator)
+            IGoogleTokenValidator googleTokenValidator,
+            ILogger<AuthService> logger)
         {
             _context = context;
             _configuration = configuration;
             _emailSender = emailSender;
             _googleTokenValidator = googleTokenValidator;
+            _logger = logger;
         }
 
         public async Task<AuthResponseDto> RegisterAsync(RegisterRequestDto request)
@@ -289,13 +292,25 @@ namespace ExamNest.Services
 
         public async Task<AuthResponseDto> GoogleLoginAsync(GoogleLoginRequestDto request)
         {
-            var googleUser = await _googleTokenValidator.ValidateAsync(request.IdToken);
-            if (googleUser == null || string.IsNullOrWhiteSpace(googleUser.Email))
+            var validationResult = await _googleTokenValidator.ValidateAsync(request.IdToken);
+            var googleUser = validationResult.User;
+
+            if (!validationResult.IsSuccess || googleUser == null || string.IsNullOrWhiteSpace(googleUser.Email))
             {
-                return new AuthResponseDto { Success = false, Message = "Invalid Google token." };
+                var message = validationResult.ErrorCode switch
+                {
+                    "invalid_audience" => "invalid_audience: Google token audience mismatch. Configure the same OAuth client id in Angular and API.",
+                    "access_blocked" => "access_blocked: Google Sign-In is blocked for this app. Verify OAuth consent screen mode (Testing vs Production) and test users.",
+                    "unauthorized_client" => "unauthorized_client: Google OAuth client is not authorized for this request.",
+                    _ => "Invalid Google token."
+                };
+
+                _logger.LogWarning("Google login rejected. ErrorCode: {ErrorCode}; Detail: {Detail}", validationResult.ErrorCode ?? "unknown", validationResult.ErrorMessage ?? "n/a");
+                return new AuthResponseDto { Success = false, Message = message };
             }
 
             var normalizedEmail = googleUser.Email.Trim().ToLowerInvariant();
+            _logger.LogInformation("Google login payload received for email {GoogleEmail}", normalizedEmail);
             var user = await _context.Users
                 .Include(u => u.Role)
                 .FirstOrDefaultAsync(u => u.Email.ToLower() == normalizedEmail);
