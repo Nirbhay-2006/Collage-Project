@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { Router, RouterLink } from '@angular/router';
 import { LoginRegisterService } from '../Service/Login-Register/login-register-service';
 import { jwtDecode } from 'jwt-decode';
+import { HttpErrorResponse } from '@angular/common/http';
 
 declare global {
   interface Window {
@@ -21,8 +22,9 @@ export class Login implements OnInit, OnDestroy {
   Isseen = false;
   IsLogin = false;
   IsGoogleLogin = false;
+  IsGoogleAvailable = true;
   authError = '';
-  private readonly googleClientId = '385075083926-02b8nkgcnsbisntvgdnl5ac4mjfheif1.apps.googleusercontent.com';
+  private googleClientId = '';
   private googleScript?: HTMLScriptElement;
 
   constructor(
@@ -37,7 +39,7 @@ export class Login implements OnInit, OnDestroy {
       password: ['', Validators.required],
     });
 
-    this.loadGoogleAuthScript();
+    this.loadGoogleClientId();
   }
 
   ngOnDestroy(): void {
@@ -73,6 +75,11 @@ export class Login implements OnInit, OnDestroy {
   SignInWithGoogle() {
     this.authError = '';
 
+    if (!this.googleClientId) {
+      this.authError = 'Google Sign-In is not configured. Please contact support.';
+      return;
+    }
+
     if (!window.google?.accounts?.id) {
       this.authError = 'Google Sign-In is not ready yet. Please wait a second and try again.';
       return;
@@ -83,6 +90,26 @@ export class Login implements OnInit, OnDestroy {
       if (notification?.isNotDisplayed?.() || notification?.isSkippedMoment?.()) {
         this.IsGoogleLogin = false;
       }
+    });
+  }
+
+  private loadGoogleClientId() {
+    this.service.GetGoogleClientId().subscribe({
+      next: (response) => {
+        this.googleClientId = response?.clientId?.trim() ?? '';
+
+        if (!this.googleClientId) {
+          this.IsGoogleAvailable = false;
+          this.authError = 'Google Sign-In is not configured. Please contact support.';
+          return;
+        }
+
+        this.loadGoogleAuthScript();
+      },
+      error: () => {
+        this.IsGoogleAvailable = false;
+        this.authError = 'Google Sign-In setup is unavailable right now. Please try email login.';
+      },
     });
   }
 
@@ -129,9 +156,12 @@ export class Login implements OnInit, OnDestroy {
         this.IsGoogleLogin = false;
         this.handleAuthSuccess(res.token);
       },
-      error: () => {
+      error: (error: HttpErrorResponse) => {
         this.IsGoogleLogin = false;
-        this.authError = 'Google login failed. Please try email login or retry.';
+        const backendMessage = error?.error?.message;
+        this.authError = backendMessage && typeof backendMessage === 'string'
+          ? backendMessage
+          : 'Google login failed. Please verify OAuth client ID and try again.';
       },
     });
   }
