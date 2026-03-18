@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { Router, RouterLink } from '@angular/router';
 import { LoginRegisterService } from '../Service/Login-Register/login-register-service';
 import { jwtDecode } from 'jwt-decode';
+import { HttpErrorResponse } from '@angular/common/http';
 
 declare global {
   interface Window {
@@ -153,9 +154,12 @@ export class Login implements OnInit, OnDestroy {
         this.IsGoogleLogin = false;
         this.handleAuthSuccess(res.token);
       },
-      error: () => {
+      error: (error: HttpErrorResponse) => {
         this.IsGoogleLogin = false;
-        this.authError = 'Google login failed. Please try email login or retry.';
+        const backendMessage = error?.error?.message;
+        this.authError = backendMessage && typeof backendMessage === 'string'
+          ? backendMessage
+          : 'Google login failed. Please verify OAuth client ID and try again.';
       },
     });
   }
