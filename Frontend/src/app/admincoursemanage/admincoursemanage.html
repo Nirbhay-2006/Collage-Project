@@ -1,0 +1,282 @@
+@if (Isloading) {
+  <div class="loader">
+    <div class="box box-1">
+      <div class="side-left"></div>
+      <div class="side-right"></div>
+      <div class="side-top"></div>
+    </div>
+    <div class="box box-2">
+      <div class="side-left"></div>
+      <div class="side-right"></div>
+      <div class="side-top"></div>
+    </div>
+    <div class="box box-3">
+      <div class="side-left"></div>
+      <div class="side-right"></div>
+      <div class="side-top"></div>
+    </div>
+    <div class="box box-4">
+      <div class="side-left"></div>
+      <div class="side-right"></div>
+      <div class="side-top"></div>
+    </div>
+  </div>
+}
+
+<div class="table-container main" [class.blur]="Isloading">
+  <div class="header">
+    <h2>Course Management</h2>
+
+    <!-- 🔍 SEARCH -->
+    <div class="row g-3 mb-3">
+      <div class="col-12 col-md-10">
+        <input type="text" class="form-control" placeholder="Search user..." />
+      </div>
+
+      <div class="col-12 col-md-2">
+        <button class="btn btn-success">Search</button>
+      </div>
+    </div>
+
+    <!-- 📋 TABLE -->
+    <table class="custom-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Title</th>
+          <th>Description</th>
+          <th>Start Date</th>
+          <th>End Date</th>
+          <th>Fees</th>
+          <th>Published</th>
+          <th>Teacher</th>
+          <th>Created</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        @if (courses.length > 0) {
+          @for (item of courses; track item.courseId; let index = $index) {
+            <tr>
+              <td>{{ index + 1 }}</td>
+              <td>{{ item.title }}</td>
+              <td>{{ item.description }}</td>
+              <td>{{ item.startDate | date }}</td>
+              <td>{{ item.endDate | date }}</td>
+              <td>₹{{ item.fees }}</td>
+              <td>{{ item.isPublished }}</td>
+              <td>{{ item.teacherName }}</td>
+              <td>{{ item.createdAt | date }}</td>
+
+              <td>
+                <!-- Publish -->
+                <button
+                  class="btn btn-warning"
+                  [class.published]="item.isPublished"
+                  (click)="PublishCourse(item.courseId)"
+                >
+                  {{ item.isPublished ? 'Published' : 'Publish Now!' }}
+                </button>
+                |
+                <!-- Delete -->
+                <button class="btn btn-danger" (click)="openDeleteModal(item.courseId)">
+                  Delete
+                </button>
+                |
+                <button class="btn btn-secondary btn-sm" (click)="openStudentsModal(item.courseId)">
+                  Students
+                </button>
+                <button class="btn btn-info btn-sm" (click)="openDetails(item.courseId)">
+                  View Details
+                </button>
+              </td>
+            </tr>
+          }
+        } @else {
+          <tr>
+            <td colspan="10" class="text-center">No courses found</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- 🧾 DELETE MODAL -->
+<div class="modal fade" #deletemodel id="exampleModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <!-- HEADER -->
+      <div class="modal-header">
+        <h5 class="modal-title">Confirm Delete</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <!-- BODY -->
+      <div class="modal-body">
+        <p>Are you sure you want to delete this course?</p>
+
+        <!-- 🔥 ERROR MESSAGE INSIDE MODAL -->
+        @if (errorMessage) {
+          <div class="alert alert-danger mt-2">
+            {{ errorMessage }}
+          </div>
+        }
+      </div>
+
+      <!-- FOOTER -->
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancel</button>
+
+        <button
+          type="button"
+          class="btn btn-danger"
+          (click)="confirmDelete()"
+          [disabled]="isDeleting"
+        >
+          {{ isDeleting ? 'Deleting...' : 'Yes, Delete' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!--  course wise student -->
+<div class="modal fade" #studentsModal tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <!-- HEADER -->
+      <div class="modal-header">
+        <h5>Course Students</h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <!-- BODY -->
+      <div class="modal-body">
+        <!-- 🔄 LOADER -->
+        @if (isStudentsLoading) {
+          <div class="text-center">
+            <div class="spinner-border text-primary"></div>
+            <p>Loading students...</p>
+          </div>
+        }
+
+        <!-- ❌ EMPTY -->
+        @if (!isStudentsLoading && students.length === 0) {
+          <p>No students found</p>
+        }
+
+        <!-- ✅ TABLE -->
+        @if (!isStudentsLoading && students.length > 0) {
+          <table class="table table-bordered">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              @for (s of students; let i = $index; track i) {
+                <tr>
+                  <td>{{ i + 1 }}</td>
+                  <td>{{ s.studentName }}</td>
+                  <td>{{ s.email }}</td>
+                  <td>{{ s.phone }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- detail model -->
+<div class="modal fade" id="courseModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <!-- Header -->
+      <div class="modal-header">
+        <h5 class="modal-title">Course Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <!-- Body -->
+      <div class="modal-body">
+        <!-- Loader -->
+        <div *ngIf="isLoading" class="text-center">
+          <div class="spinner-border text-primary"></div>
+        </div>
+
+        <!-- Data -->
+        <div *ngIf="!isLoading && course">
+          <div class="row">
+            <div class="col-md-6 mb-2">
+              <label>Title</label>
+              <input class="form-control" [value]="course.title" readonly />
+            </div>
+
+            <div class="col-md-6 mb-2">
+              <label>Teacher</label>
+              <input class="form-control" [value]="course.teacherName" readonly />
+            </div>
+
+            <div class="col-md-6 mb-2">
+              <label>Fees</label>
+              <input class="form-control" [value]="course.fees" readonly />
+            </div>
+
+            <div class="col-md-6 mb-2">
+              <label>Published</label>
+              <input class="form-control" [value]="course.isPublished" readonly />
+            </div>
+
+            <div class="col-md-6 mb-2">
+              <label>Start Date</label>
+              <input class="form-control" [value]="course.startDate | date" readonly />
+            </div>
+
+            <div class="col-md-6 mb-2">
+              <label>End Date</label>
+              <input class="form-control" [value]="course.endDate | date" readonly />
+            </div>
+
+            <div class="col-12 mb-2">
+              <label>Description</label>
+              <textarea class="form-control" [value]="course.description" readonly></textarea>
+            </div>
+          </div>
+
+          <!-- 🎬 Videos Section -->
+          <hr />
+          <h6>Course Videos</h6>
+
+          <div *ngIf="course.videos?.length > 0; else noVideos">
+            <div *ngFor="let v of course.videos" class="mb-3">
+              <p>
+                <b>{{ v.fileName }}</b>
+              </p>
+              <video width="100%" controls>
+                <source [src]="'https://localhost:44385' + v.filePath" [type]="v.fileType" />
+              </video>
+            </div>
+          </div>
+
+          <ng-template #noVideos>
+            <p class="text-muted">No videos available</p>
+          </ng-template>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>

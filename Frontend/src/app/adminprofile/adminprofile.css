@@ -1,0 +1,15 @@
+.profile-wrapper {
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.card-header img {
+  object-fit: cover;
+}
+
+.card-body label {
+  font-weight: 600;
+}
+
+.btn-light {
+  font-size: 0.85rem;
+}

@@ -1,0 +1,228 @@
+<div class="d-flex" id="wrapper">
+  <div id="page-content-wrapper" class="w-100 bg-light-grey">
+    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom px-4 py-3">
+      <h4 class="m-0 font-weight-bold">Analytics Overview</h4>
+      <div class="ms-auto d-flex align-items-center">
+        <span class="me-3 text-muted">Welcome, {{ username }}</span>
+
+        <img
+          [src]="
+            'https://ui-avatars.com/api/?name=' +
+            getShortName(username) +
+            '&background=0D6EFD&color=fff'
+            "
+          class="rounded-circle"
+          width="35"
+        />
+      </div>
+    </nav>
+
+    <div class="container-fluid p-4">
+      <!-- Loader -->
+      @if (isLoading) {
+        <div class="text-center my-5">
+          <div class="spinner-border text-primary" role="status"></div>
+          <p class="mt-2">Loading dashboard...</p>
+        </div>
+      }
+
+      <!-- Cards -->
+      @if (!isLoading) {
+        <div class="row mb-4">
+          @for (stat of stats; track stat.title) {
+            <div class="col-md-3 mt-2">
+              <div class="card stat-card border-0 shadow-sm">
+                <div class="card-body">
+                  <h6 class="text-muted text-uppercase small">{{ stat.title }}</h6>
+                  <h2 class="m-0 font-weight-bold">{{ stat.value }}</h2>
+
+                  <div class="mt-2" [ngClass]="stat.isUp ? 'text-success' : 'text-danger'">
+                    <i [class]="stat.isUp ? 'bi bi-arrow-up' : 'bi bi-arrow-down'"></i>
+                    {{ stat.percent }}%
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+      <div class="card border-0 shadow-sm">
+        <!-- Header -->
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+          <h5 class="m-0 fw-semibold">Active Examination Batches</h5>
+          <span class="badge bg-primary">{{ examsdetail.length }} Exams</span>
+        </div>
+
+        <!-- Body -->
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <!-- Table Head -->
+              <thead class="bg-light">
+                <tr class="text-muted small text-uppercase">
+                  <th>Exam</th>
+                  <th>Publisher</th>
+                  <th>Course</th>
+                  <th>Date</th>
+                  <th>Status</th>
+                  <th>Avg Score</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                @if (isloadexamdetail) {
+                  <tr>
+                    <td colspan="6" class="text-center py-5">
+                      <div class="spinner-border text-primary"></div>
+                      <div class="mt-2 text-muted">Loading exams...</div>
+                    </td>
+                  </tr>
+                } @else {
+                  @if (examsdetail.length === 0) {
+                    <tr>
+                      <td colspan="6" class="text-center py-5 text-muted">🚫 No exams found</td>
+                    </tr>
+                  } @else {
+                    @for (exam of examsdetail; track exam.examId) {
+                      <tr class="align-middle border-bottom exam-row">
+                        <!-- Exam -->
+                        <td>
+                          <div class="fw-semibold text-dark">
+                            {{ exam.examTitle }}
+                          </div>
+                        </td>
+
+                        <!-- Publisher -->
+                        <td>
+                          <div class="d-flex align-items-center gap-2">
+                            <div class="avatar-circle bg-primary text-white">
+                              {{ exam.teacherName?.charAt(0) }}
+                            </div>
+                            <div>
+                              <small class="text-dark fw-medium">
+                                {{ exam.teacherName }}
+                              </small>
+                            </div>
+                          </div>
+                        </td>
+
+                        <!-- Course -->
+                        <td>
+                          <span class="badge bg-light text-dark border px-3 py-2">
+                            📘 {{ exam.courseName }}
+                          </span>
+                        </td>
+
+                        <!-- Date -->
+                        <td>
+                          <span class="text-muted">
+                            📅 {{ exam.createdDate | date: 'mediumDate' }}
+                          </span>
+                        </td>
+
+                        <!-- Status -->
+                        <td>
+                          <span
+                            class="badge rounded-pill px-3 py-2 fw-semibold"
+                            [ngClass]="
+                              exam.isPublished
+                                ? 'bg-success-subtle text-success'
+                                : 'bg-secondary-subtle text-secondary'
+                            "
+                          >
+                            {{ exam.isPublished ? '✔ Published' : '⏳ Draft' }}
+                          </span>
+                        </td>
+
+                        <!-- Avg Score -->
+                        <td style="min-width: 200px">
+                          <div class="d-flex align-items-center gap-2">
+                            <!-- % -->
+                            <div class="fw-bold text-dark" style="width: 45px">
+                              {{ exam.avgPercentage }}%
+                            </div>
+
+                            <!-- Progress -->
+                            <div class="progress flex-grow-1" style="height: 8px">
+                              <div
+                                class="progress-bar"
+                                role="progressbar"
+                                [ngClass]="
+                                  exam.avgPercentage >= 75
+                                    ? 'bg-success'
+                                    : exam.avgPercentage >= 50
+                                      ? 'bg-warning'
+                                      : 'bg-danger'
+                                "
+                                [style.width.%]="exam.avgPercentage"
+                              ></div>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    }
+                  }
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+ <div class="container-fluid p-4">
+
+  <!-- Charts Row -->
+  <div class="row mt-4">
+
+    <!-- Exam Chart -->
+    <div class="col-md-6">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-white">
+          <h6 class="m-0">📊 Exam Average Scores</h6>
+        </div>
+        <div class="card-body">
+          <canvas id="examChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Course Chart -->
+    <div class="col-md-6">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-white">
+          <h6 class="m-0">💰 Course Earnings</h6>
+        </div>
+        <div class="card-body">
+          <canvas id="courseChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<div class="modal fade" id="logoutModal" tabindex="-1" #logoutmodel>
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-body text-center p-5">
+        <i class="bi bi-exclamation-circle text-warning display-1"></i>
+        <h3 class="mt-4">Are you sure?</h3>
+        <p class="text-muted">You will need to login again to access the dashboard.</p>
+        <div class="mt-4">
+          <button type="button" class="btn btn-light px-4 me-2" data-bs-dismiss="modal">
+            Cancel
+          </button>
+          <button type="button" class="btn btn-primary px-4" (click)="ConformLogout()">
+            Yes, Logout
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

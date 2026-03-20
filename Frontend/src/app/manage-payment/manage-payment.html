@@ -1,0 +1,177 @@
+@if (islist) {
+  <h4 class="text-center">Loading.....</h4>
+} @else {
+  <h3>Payment Managment</h3>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Payment Id</th>
+        <th>Amount</th>
+        <th>Status</th>
+        <th>Course</th>
+        <th>Student</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      @for (item of payments; track item.paymentId; let i = $index) {
+        <tr>
+          <td>{{ i + 1 }}</td>
+          <td>{{ item.razorpayPaymentId }}</td>
+          <td>₹{{ item.amount }}</td>
+          <td>{{ item.status }}</td>
+          <td>{{ item.courseTitle }}</td>
+          <td>{{ item.studentName }}</td>
+
+          <td>
+            <button class="btn btn-primary" (click)="openDetailModal(item.paymentId)">
+              Details
+            </button>|
+            <button class="btn btn-info" (click)="openCheckModal(item.razorpayPaymentId)">
+              Check Payment
+            </button>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+}
+
+<div class="modal fade" #detailModal tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Payment Details</h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        @if (isLoading) {
+          <p>Loading...</p>
+        }
+
+        @if (errorMessage) {
+          <div class="alert alert-danger">{{ errorMessage }}</div>
+        }
+
+        @if (selectedPayment) {
+          <h6>💳 Payment Info</h6>
+          <p><b>Payment Id:</b> {{ selectedPayment.razorpayPaymentId }}</p>
+          <p><b>Amount:</b> ₹{{ selectedPayment.amount }}</p>
+          <p><b>Status:</b> {{ selectedPayment.status }}</p>
+
+          <hr />
+
+          <h6>📘 Course Info</h6>
+          <p><b>Title:</b> {{ selectedPayment.courseTitle }}</p>
+          <p><b>Fees:</b> ₹{{ selectedPayment.courseFees }}</p>
+
+          <hr />
+
+          <h6>👤 Student Info</h6>
+          <p><b>Name:</b> {{ selectedPayment.studentName }}</p>
+          <p><b>Email:</b> {{ selectedPayment.studentEmail }}</p>
+
+          <hr />
+
+          <h6>📦 Order Info</h6>
+          <p><b>Order Id:</b> {{ selectedPayment.orderId }}</p>
+
+          <hr />
+
+          <h6>📚 Subscription</h6>
+          <p><b>Status:</b> {{ selectedPayment.subscriptionStatus }}</p>
+        }
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- payment modal -->
+<!-- ✅ CHECK PAYMENT MODAL -->
+<div class="modal fade" #checkModal tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <!-- HEADER -->
+      <div class="modal-header">
+        <h5 class="modal-title">Check Payment Status</h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <!-- BODY -->
+      <div class="modal-body">
+        <!-- INPUT -->
+        <div class="mb-3">
+          <label class="form-label">Razorpay Payment ID</label>
+          <input
+            type="text"
+            class="form-control"
+            [(ngModel)]="checkPaymentId"
+            placeholder="Enter Payment ID"
+          />
+        </div>
+
+        <!-- BUTTON -->
+        <button class="btn btn-primary mb-3" (click)="checkPayment()" [disabled]="isChecking">
+          {{ isChecking ? 'Checking...' : 'Check Payment' }}
+        </button>
+
+        <!-- ERROR -->
+        @if (checkError) {
+          <div class="alert alert-danger">
+            {{ checkError }}
+          </div>
+        }
+
+        <!-- RESULT TABLE -->
+        @if (checkResult) {
+          <table class="table table-bordered">
+            <thead>
+              <tr>
+                <th>Field</th>
+                <th>Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Payment ID</td>
+                <td>{{ checkResult.razorpayPaymentId }}</td>
+              </tr>
+              <tr>
+                <td>Status</td>
+                <td>
+                  <span class="badge bg-info">
+                    {{ checkResult.status }}
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td>Amount</td>
+                <td>₹{{ checkResult.amount }}</td>
+              </tr>
+              <tr>
+                <td>Method</td>
+                <td>{{ checkResult.method }}</td>
+              </tr>
+              <tr>
+                <td>Email</td>
+                <td>{{ checkResult.email }}</td>
+              </tr>
+              <tr>
+                <td>Contact</td>
+                <td>{{ checkResult.contact }}</td>
+              </tr>
+            </tbody>
+          </table>
+        }
+      </div>
+
+      <!-- FOOTER -->
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>

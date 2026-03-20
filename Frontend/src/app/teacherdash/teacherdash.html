@@ -1,0 +1,141 @@
+<div class="dashboard">
+  <h2 class="mb-4">Welcome ,{{ username }}</h2>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <div class="card">
+      <i class="bi bi-journal-bookmark-fill"></i>
+      <h3>{{ totalcourse }}</h3>
+      <p>Total Courses</p>
+    </div>
+
+    <div class="card">
+      <i class="bi bi-file-earmark-text-fill"></i>
+      <h3>{{ totalexam }}</h3>
+      <p>Active Exams</p>
+    </div>
+
+    <div class="card">
+      <i class="bi bi-people-fill"></i>
+      <h3>{{ totalStudents }}</h3>
+      <p>Total Students</p>
+    </div>
+
+    <div class="card">
+      <i class="bi bi-credit-card-fill"></i>
+      <h3>₹ {{ totalEarning }}</h3>
+      <p>Monthly Earnings</p>
+    </div>
+  </div>
+
+  <!-- Recent Activity -->
+  <div class="container mt-4">
+    <div class="row g-4">
+      <!-- 🔵 RECENT EXAMS -->
+      <div class="col-md-6">
+        <div class="card shadow-sm border-0 rounded-4">
+          <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Recent Exams</h5>
+          </div>
+
+          <div class="card-body">
+            <!-- Loader -->
+            <div *ngIf="isLoadingExams" class="text-center py-4">
+              <div class="spinner-border text-primary"></div>
+            </div>
+
+            <!-- Table -->
+            <table
+              *ngIf="!isLoadingExams && recentExams.length"
+              class="table table-hover align-middle"
+            >
+              <thead class="table-light">
+                <tr>
+                  <th>Title</th>
+                  <th>Start</th>
+                  <th>End</th>
+                  <th>Duration</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                <tr *ngFor="let exam of recentExams">
+                  <td>{{ exam.title }}</td>
+                  <td>{{ exam.startAt | date: 'short' }}</td>
+                  <td>{{ exam.endAt | date: 'short' }}</td>
+                  <td>{{ exam.durationMinutes }} min</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <!-- No Data -->
+            <div *ngIf="!isLoadingExams && !recentExams.length" class="text-center text-muted">
+              No recent exams
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 🟢 RECENT SUBSCRIBERS -->
+      <div class="col-md-6">
+        <div class="card shadow-sm border-0 rounded-4">
+          <div class="card-header bg-success text-white">
+            <h5 class="mb-0">Recent Subscribers</h5>
+          </div>
+
+          <div class="card-body">
+            <!-- Loader -->
+            <div *ngIf="isLoadingSubscribers" class="text-center py-4">
+              <div class="spinner-border text-success"></div>
+            </div>
+
+            <!-- Table -->
+            <table
+              *ngIf="!isLoadingSubscribers && recentSubscribers.length"
+              class="table table-hover align-middle"
+            >
+              <thead class="table-light">
+                <tr>
+                  <th>Student</th>
+                  <th>Course</th>
+                  <th>Status</th>
+                  <th>Joined</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                <tr *ngFor="let s of recentSubscribers">
+                  <td>
+                    <div class="fw-semibold">{{ s.studentName }}</div>
+                    <small class="text-muted">{{ s.email }}</small>
+                  </td>
+
+                  <td>{{ s.courseTitle }}</td>
+
+                  <td>
+                    <span
+                      class="badge"
+                      [ngClass]="s.status === 'Active' ? 'bg-success' : 'bg-secondary'"
+                    >
+                      {{ s.status }}
+                    </span>
+                  </td>
+
+                  <td>{{ s.joinedAt | date: 'short' }}</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <!-- No Data -->
+            <div
+              *ngIf="!isLoadingSubscribers && !recentSubscribers.length"
+              class="text-center text-muted"
+            >
+              No recent subscribers
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,61 @@
+@if (isload) {
+  <h4>Loading....</h4>
+}@else {
+
+  <div class="container mt-4">
+    <h3>Role Management</h3>
+
+    <button class="btn btn-primary mb-3" (click)="openModal()">Add Role</button>
+
+    <table class="table table-bordered">
+      <thead>
+      <tr>
+        <th>ID</th>
+        <th>Role Name</th>
+        <th>Created</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <tr *ngFor="let r of roles">
+        <td>{{r.roleId}}</td>
+        <td>{{r.roleName}}</td>
+        <td>{{r.createdAt | date}}</td>
+        <td>
+          <button class="btn btn-sm btn-warning me-2" (click)="openModal(r)">Edit</button>
+          <button class="btn btn-sm btn-danger" (click)="deleteRole(r.roleId)">Delete</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+}
+
+<!-- Bootstrap Modal -->
+<div class="modal fade" id="roleModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">
+          {{ roleData.roleId === 0 ? 'Add Role' : 'Edit Role' }}
+        </h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <input type="text"
+               class="form-control"
+               [(ngModel)]="roleData.roleName"
+               placeholder="Enter role name">
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-success" (click)="saveRole()">Save</button>
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+      </div>
+
+    </div>
+  </div>
+</div>

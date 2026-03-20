@@ -1,0 +1,130 @@
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+
+      <div class="card shadow-lg border-0 rounded-4">
+
+        <!-- HEADER -->
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center rounded-top-4">
+          <div>
+            <!-- ✅ FIXED (use userData NOT fullName) -->
+            <h4 class="mb-0">
+              {{ userData?.firstName }}
+              {{ userData?.middleName }}
+              {{ userData?.lastName }}
+            </h4>
+
+            <small>{{ userData?.email }}</small>
+          </div>
+
+          <button class="btn btn-light btn-sm" (click)="toggleEdit()">
+            {{ isEditMode ? 'Cancel' : 'Edit Profile' }}
+          </button>
+        </div>
+
+        <!-- BODY -->
+        <div class="card-body p-4">
+
+          <!-- EDIT MODE -->
+          <form *ngIf="isEditMode" [formGroup]="profileForm" (ngSubmit)="saveProfile()">
+
+            <div class="row mb-3">
+              <div class="col-md-4">
+                <label>First Name</label>
+                <input formControlName="firstName" class="form-control">
+              </div>
+
+              <div class="col-md-4">
+                <label>Middle Name</label>
+                <input formControlName="middleName" class="form-control">
+              </div>
+
+              <div class="col-md-4">
+                <label>Last Name</label>
+                <input formControlName="lastName" class="form-control">
+              </div>
+            </div>
+
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label>Email</label>
+                <input formControlName="email" class="form-control">
+              </div>
+
+              <div class="col-md-6">
+                <label>Phone</label>
+                <input formControlName="phone" class="form-control">
+              </div>
+            </div>
+
+            <div class="text-end">
+              <button type="submit" class="btn btn-primary">
+                Save Changes
+              </button>
+            </div>
+
+          </form>
+
+          <!-- VIEW MODE -->
+          <div *ngIf="!isEditMode">
+
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <strong>Username:</strong>
+                <p>{{ userData?.username }}</p>
+              </div>
+
+              <div class="col-md-6">
+                <strong>Role:</strong>
+                <p>
+                  {{ userData?.roleId == 1 ? 'Admin' :
+                     userData?.roleId == 2 ? 'Teacher' : 'Student' }}
+                </p>
+              </div>
+            </div>
+
+            <div class="mb-2">
+              <strong>Name:</strong>
+              {{ userData?.firstName }}
+              {{ userData?.middleName }}
+              {{ userData?.lastName }}
+            </div>
+
+            <div class="mb-2">
+              <strong>Phone:</strong>
+              {{ userData?.phone }}
+            </div>
+
+            <div class="mb-2">
+              <strong>Status:</strong>
+              <span class="badge"
+                [ngClass]="userData?.isActive ? 'bg-success' : 'bg-danger'">
+                {{ userData?.isActive ? 'Active' : 'Inactive' }}
+              </span>
+            </div>
+
+            <hr>
+
+            <div class="mb-2">
+              <strong>Created At:</strong>
+              {{ userData?.createdAt | date:'medium' }}
+            </div>
+
+            <div class="mb-2">
+              <strong>Last Login:</strong>
+              {{ userData?.lastLoginAt | date:'medium' }}
+            </div>
+
+            <div class="mb-2">
+              <strong>Last Updated:</strong>
+              {{ userData?.updatedAt | date:'medium' }}
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

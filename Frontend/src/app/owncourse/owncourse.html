@@ -1,0 +1,334 @@
+<div class="container">
+  <h2>My Courses</h2>
+
+  <div *ngIf="isLoading">Loading courses...</div>
+
+  <div *ngIf="!isLoading && courses.length === 0">No courses found.</div>
+
+  <div *ngFor="let course of courses" class="course-card">
+    <div class="course-header">
+      <h3>{{ course.title }}</h3>
+      <span class="status" [class.published]="course.isPublished">
+        {{ course.isPublished ? 'Published' : 'Draft' }}
+      </span>
+    </div>
+
+    <p>{{ course.description }}</p>
+
+    <div class="course-info">
+      <span>Duration: {{ course.duration }}</span>
+      <span>Fees: ₹{{ course.fees }}</span>
+    </div>
+
+    <div class="videos-section">
+      <h4>Thumbnail</h4>
+
+      <div *ngIf="!course.thumbailUrl">No Thumbnail uploaded.</div>
+
+      <img
+        *ngIf="course.thumbailUrl"
+        [src]="'https://localhost:44385' + course.thumbailUrl"
+        width="200"
+      />
+    </div>
+
+    <div>
+      <p>Date : {{ course.startDate | date }} To {{ course.endDate | date }}</p>
+    </div>
+
+    <!-- Videos Section -->
+    <div class="videos-section">
+      <h4>Videos</h4>
+
+      <div *ngIf="course.videos.length === 0">No videos uploaded.</div>
+
+      <div *ngFor="let video of course.videos" class="video-item">
+        <video width="300" controls>
+          <source [src]="'https://localhost:44385/' + video.filePath" type="video/mp4" />
+        </video>
+      </div>
+    </div>
+    <button (click)="editbtn(course.courseId)">Edit</button>
+    <button (click)="detailbtn(course.courseId)">Detail</button>
+    <button class="btn btn-danger" (click)="openDeleteModal(course.courseId)">Delete</button>
+  </div>
+</div>
+
+<!--  edit model -->
+
+<div class="modal fade" #editModel tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content shadow-lg border-0">
+      <!-- HEADER -->
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">
+          {{ selectedCourse?.title || 'Course Detail' }}
+        </h5>
+        <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <!-- BODY -->
+      <div class="modal-body p-4 text-center">
+        @if (Isloaddetail) {
+          <!-- 🔥 LOADER -->
+          <div class="d-flex justify-content-center align-items-center" style="height: 200px">
+            <div class="spinner-border text-primary"></div>
+          </div>
+        } @else if (selectedCourse) {
+          <!-- Thumbnail -->
+          <div class="text-center mb-4">
+            <img
+              [src]="'https://localhost:44385' + selectedCourse.thumbailUrl"
+              class="img-fluid rounded shadow"
+              style="max-height: 200px"
+            />
+          </div>
+
+          <!-- Course Info -->
+          <div class="row mb-3 text-start">
+            <div class="col-md-6">
+              <strong>Start Date:</strong>
+              <p>{{ selectedCourse.startDate | date: 'medium' }}</p>
+            </div>
+
+            <div class="col-md-6">
+              <strong>End Date:</strong>
+              <p>{{ selectedCourse.endDate | date: 'medium' }}</p>
+            </div>
+          </div>
+
+          <div class="mb-3 text-start">
+            <strong>Description:</strong>
+            <p>{{ selectedCourse.description }}</p>
+          </div>
+
+          <div class="mb-3 text-start">
+            <strong>Fees:</strong>
+            ₹{{ selectedCourse.fees }}
+          </div>
+
+          <div class="mb-3 text-start">
+            <strong>Status:</strong>
+            <span
+              class="badge"
+              [ngClass]="selectedCourse.isPublished ? 'bg-success' : 'bg-warning'"
+            >
+              {{ selectedCourse.isPublished ? 'Published' : 'Draft' }}
+            </span>
+          </div>
+          <hr />
+          <h5 class="text-success mb-3 text-start">Upload New Videos</h5>
+
+          <div class="mb-3 text-start">
+            <input type="file" multiple class="form-control" (change)="onVideoSelected($event)" />
+          </div>
+
+          <div class="text-end">
+            <button
+              class="btn btn-success"
+              (click)="uploadVideos()"
+              [disabled]="!selectedFiles.length || isUploading"
+            >
+              {{ isUploading ? 'Uploading...' : 'Upload Videos' }}
+            </button>
+          </div>
+
+          <ul *ngIf="selectedFiles.length" class="mt-2 text-start">
+            <li *ngFor="let file of selectedFiles">
+              {{ file.name }}
+            </li>
+          </ul>
+
+          <!-- VIDEOS -->
+          <h5 class="text-primary mb-3 text-start">Course Videos</h5>
+
+          <div class="row g-3">
+            @for (v of selectedCourse.media; track v.courseMediaId) {
+              <div class="col-md-4">
+                <div class="card shadow-sm border-0">
+                  <video
+                    controls
+                    class="w-100 rounded-top"
+                    style="height: 200px; object-fit: cover"
+                  >
+                    <source [src]="'https://localhost:44385/' + v.filePath" type="video/mp4" />
+                  </video>
+
+                  <div class="card-body text-center">
+                    <small class="text-muted"> Video ID: {{ v.courseMediaId }} </small>
+                  </div>
+                  <button (click)="videodelete(v.courseMediaId)">Delete</button>
+                </div>
+              </div>
+            }
+          </div>
+
+          @if (!selectedCourse.media?.length) {
+            <div class="text-center text-muted mt-3">No videos available</div>
+          }
+        }
+      </div>
+
+      <!-- FOOTER -->
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" #detailModal tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content shadow-lg border-0 rounded-4">
+
+      <!-- HEADER -->
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">
+          {{ selectedCourse?.title || 'Course Detail' }}
+        </h5>
+        <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <!-- BODY -->
+      <div class="modal-body p-4">
+
+        <!-- 🔥 LOADER -->
+        <div *ngIf="Isloaddetail" class="text-center py-5">
+          <div class="spinner-border text-primary"></div>
+          <p class="mt-2">Loading course details...</p>
+        </div>
+
+        <!-- ✅ CONTENT -->
+        <div *ngIf="!Isloaddetail && selectedCourse">
+
+          <!-- Thumbnail -->
+          <div class="text-center mb-4">
+            <img
+              [src]="'https://localhost:44385' + selectedCourse.thumbailUrl"
+              class="img-fluid rounded shadow"
+              style="max-height: 220px"
+            />
+          </div>
+
+          <!-- Basic Info -->
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <strong>Start Date:</strong>
+              <p>{{ selectedCourse.startDate | date:'medium' }}</p>
+            </div>
+
+            <div class="col-md-6">
+              <strong>End Date:</strong>
+              <p>{{ selectedCourse.endDate | date:'medium' }}</p>
+            </div>
+          </div>
+
+          <!-- Description -->
+          <div class="mb-3">
+            <strong>Description:</strong>
+            <p>{{ selectedCourse.description }}</p>
+          </div>
+
+          <!-- Fees -->
+          <div class="mb-3">
+            <strong>Fees:</strong> ₹{{ selectedCourse.fees }}
+          </div>
+
+          <!-- Teacher -->
+          <div class="mb-3">
+            <strong>Teacher:</strong>
+            {{ selectedCourse.teacher?.firstName }}
+            {{ selectedCourse.teacher?.lastName }}
+          </div>
+
+          <!-- Status -->
+          <div class="mb-3">
+            <strong>Status:</strong>
+            <span class="badge"
+              [ngClass]="selectedCourse.isPublished ? 'bg-success' : 'bg-warning'">
+              {{ selectedCourse.isPublished ? 'Published' : 'Draft' }}
+            </span>
+          </div>
+
+          <hr>
+
+          <!-- VIDEOS -->
+          <h5 class="text-primary mb-3">Course Videos</h5>
+
+          <div class="row g-3">
+            <div class="col-md-4" *ngFor="let v of selectedCourse.media">
+              <div class="card shadow-sm border-0">
+
+                <video controls class="w-100 rounded-top"
+                  style="height:200px; object-fit:cover">
+                  <source
+                    [src]="'https://localhost:44385/' + v.filePath"
+                    type="video/mp4">
+                </video>
+
+                <div class="card-body text-center">
+                  <small class="text-muted">
+                    Video ID: {{ v.courseMediaId }}
+                  </small>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <!-- No Videos -->
+          <div *ngIf="!selectedCourse.media?.length"
+               class="text-center text-muted mt-3">
+            No videos available
+          </div>
+
+        </div>
+      </div>
+
+      <!-- FOOTER -->
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">
+          Close
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- delete modal -->
+
+<div class="modal fade" #deleteModal tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg">
+      <!-- HEADER -->
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title">Delete Course</h5>
+        <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <!-- BODY -->
+      <div class="modal-body text-center">
+        @if (isDeleting) {
+          <!-- 🔥 LOADER -->
+          <div class="d-flex justify-content-center align-items-center" style="height: 100px">
+            <div class="spinner-border text-danger"></div>
+          </div>
+        } @else {
+          <p class="mb-0">Are you sure you want to delete this course?</p>
+        }
+      </div>
+
+      <!-- FOOTER -->
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal" [disabled]="isDeleting">
+          Cancel
+        </button>
+
+        <button class="btn btn-danger" (click)="confirmDelete()" [disabled]="isDeleting">
+          {{ isDeleting ? 'Deleting...' : 'Yes, Delete' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
